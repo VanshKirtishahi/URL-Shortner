@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neo-yellow: #ffe17c;
+  --color-neo-charcoal: #171e19;
+  --color-neo-sage: #b7c6c2;
+  
+  /* Fallback to standard sans if Cabinet/Satoshi aren't loaded locally */
+  --font-cabinet: 'Cabinet Grotesk', system-ui, sans-serif;
+  --font-satoshi: 'Satoshi', system-ui, sans-serif;
+}
+
+@layer utilities {
+  .shadow-hard {
+    box-shadow: 4px 4px 0px 0px #000000;
+  }
+  .shadow-hard-lg {
+    box-shadow: 8px 8px 0px 0px #000000;
+  }
+  .shadow-hard-xl {
+    box-shadow: 12px 12px 0px 0px #000000;
+  }
+  .text-stroke {
+    -webkit-text-stroke: 2px black;
+    color: transparent;
+  }
+  .bg-dots {
+    background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 2px, transparent 2px);
+    background-size: 32px 32px;
+  }
+  
+  /* The infinite marquee animation */
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-100%); }
+  }
+  .animate-marquee {
+    animation: marquee 20s linear infinite;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem; /* Prevents anchor links from hiding under the fixed header */
+}
+
+body {
+  background-color: #ffffff;
+  color: #000000;
+  font-family: var(--font-satoshi);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-cabinet);
+}
