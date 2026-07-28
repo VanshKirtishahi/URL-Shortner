@@ -2,26 +2,32 @@ import { createClient } from 'redis';
 
 const redisUrl = process.env.REDIS_URL;
 
+// Intelligently detect if we are using a managed cloud provider.
+// Upstash and Redis Labs require TLS encryption, even if the connection string says 'redis://'
+const isCloudProvider = redisUrl?.includes('upstash') || 
+                        redisUrl?.includes('cloud.redislabs') || 
+                        redisUrl?.startsWith('rediss://');
+
 const redisClient = createClient({
   url: redisUrl,
-  // CRITICAL FIX: Add this socket configuration for cloud deployments
-  socket: {
-    // Automatically enable TLS if the URL starts with 'rediss://'
-    tls: redisUrl?.startsWith('rediss://'),
-    // Prevent Node.js from rejecting cloud provider certificates
+  socket: isCloudProvider ? {
+    tls: true,
     rejectUnauthorized: false
-  }
+  } : undefined, // If local or Render internal, use standard unencrypted socket
+  
+  // Cloud providers often kill connections if they sit quiet for too long.
+  // This sends a heartbeat every 10 seconds to keep the socket permanently open.
+  pingInterval: 10000 
 });
 
 redisClient.on('error', (err) => {
-  console.error('Redis Client Error:', err);
+  console.error('Redis Client Error:', err.message);
 });
 
 redisClient.on('connect', () => {
   console.log('Successfully connected to Redis instance');
 });
 
-// If you have a connect function exported, ensure it is wrapped in try/catch
 export const connectRedis = async () => {
   try {
     if (!redisClient.isOpen) {
