@@ -1,22 +1,21 @@
 import { createClient } from 'redis';
 
-const redisUrl = process.env.REDIS_URL;
+let redisUrl = process.env.REDIS_URL;
 
-// Intelligently detect if we are using a managed cloud provider.
-// Upstash and Redis Labs require TLS encryption, even if the connection string says 'redis://'
-const isCloudProvider = redisUrl?.includes('upstash') || 
-                        redisUrl?.includes('cloud.redislabs') || 
-                        redisUrl?.startsWith('rediss://');
+// CRITICAL FIX: Upstash requires TLS. If the provided URL starts with 'redis://' 
+// instead of 'rediss://', we auto-correct it to prevent the strict protocol mismatch crash.
+if (redisUrl && redisUrl.includes('upstash.io') && redisUrl.startsWith('redis://')) {
+  redisUrl = redisUrl.replace('redis://', 'rediss://');
+}
+
+const isCloudProvider = redisUrl?.startsWith('rediss://');
 
 const redisClient = createClient({
   url: redisUrl,
   socket: isCloudProvider ? {
     tls: true,
     rejectUnauthorized: false
-  } : undefined, // If local or Render internal, use standard unencrypted socket
-  
-  // Cloud providers often kill connections if they sit quiet for too long.
-  // This sends a heartbeat every 10 seconds to keep the socket permanently open.
+  } : undefined,
   pingInterval: 10000 
 });
 
